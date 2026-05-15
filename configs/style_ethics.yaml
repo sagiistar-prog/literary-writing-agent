@@ -1,0 +1,37 @@
+living_author_imitation_refusal:
+  enabled: true
+  response: "Provide high-level craft analysis and an original alternative instead of imitating a living author."
+
+no_copyrighted_excerpts:
+  enabled: true
+  examples_must_be_original: true
+  do_not_quote_or_reconstruct_protected_text: true
+
+high_level_craft_only:
+  allowed_dimensions:
+    - narrative pace
+    - image organization
+    - natural description
+    - character observation
+    - emotional restraint
+    - conversational rhythm
+    - prose texture
+    - subject-centered perspective
+
+original_output_only:
+  enabled: true
+  require_original_premise_development: true
+  avoid_close_paraphrase: true
+
+avoid_style_cloning:
+  enabled: true
+  reject_signature_voice_requests: true
+  avoid_recognizable_sentence_habits: true
+
+safe_alternatives:
+  - abstract craft checklist
+  - original mood direction
+  - scene-specific revision notes
+  - neutral prose texture options
+  - writer-controlled rewrite prompts
+

@@ -1,0 +1,44 @@
+language: zh-CN
+demo_mode: deterministic
+preferred_outputs:
+  - structured headings
+  - concise craft notes
+  - revision rationale
+  - manual review reminders
+
+tone:
+  fiction: literary but clear
+  notes: practical and calm
+
+abstract_style_memory:
+  source_handling: "Do not store, quote, or closely paraphrase any external reference passage."
+  purpose: "Use only high-level craft methods as a reusable writing preference."
+  craft_methods:
+    - retrospective first-person memory when the user's scene supports it
+    - time-anchored recurrence such as first encounter, second encounter, later realization
+    - numbered emotional escalation across repeated encounters or returns
+    - private desire interrupted by an outside authority, turning feeling into social pressure
+    - obsession recurring in distant rooms, travel, danger, illness, or public disorder
+    - abrupt life transitions stated plainly after heightened emotion
+    - impossible vows or exaggerated promises used as character revelation
+    - taboo pressure handled as conflict, not endorsement
+    - intimate sensory pressure tied to fear, longing, secrecy, or moral uncertainty
+    - long accumulating sentences balanced by short plain admissions
+    - emotional knowledge revealed through silence, avoidance, and mutual recognition
+    - dreamlike metaphor created freshly for the new scene, never borrowed from a source
+    - desire emerging from an earlier need for safety or comfort
+    - confessional ending that reframes the relationship without overexplaining it
+  prohibitions:
+    - do not preserve source wording
+    - do not preserve distinctive source metaphors
+    - do not preserve source names, family relations, plot events, or iconic situations
+    - do not name or imitate the source author
+    - do not turn a reference passage into a visible repository example
+    - do not romanticize coercion, abuse, or non-consensual pursuit
+
+avoid:
+  - style cloning
+  - private material
+  - known-text imitation
+  - decorative suffering
+  - objectifying perspective

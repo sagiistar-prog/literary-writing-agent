@@ -1,0 +1,16 @@
+.env
+.venv
+__pycache__
+output
+work
+raw
+*.pdf
+*.docx
+*.xlsx
+*.zip
+*.mp4
+*.mov
+*.mkv
+*.wav
+*.mp3
+

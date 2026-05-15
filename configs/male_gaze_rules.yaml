@@ -1,0 +1,44 @@
+objectification_signals:
+  - isolated body-part focus
+  - passive display framing
+  - value derived from external approval
+  - pain treated as decorative beauty
+  - camera-like scanning without interiority
+
+agency_restoration:
+  - add character intention
+  - clarify immediate choice
+  - show judgment and perception
+  - connect appearance to situation
+  - make consequences visible
+
+perspective_shift:
+  from: "observer-centered description"
+  to: "subject-centered experience"
+  methods:
+    - move from watching to perceiving
+    - replace evaluation with context
+    - privilege the character's decisions
+
+sensory_reframing:
+  - use temperature, pressure, sound, texture, and distance
+  - avoid lingering object display
+  - connect body sensation to action or environment
+
+subjectivity_emphasis:
+  - desire
+  - refusal
+  - memory
+  - calculation
+  - fear
+  - humor
+  - contradiction
+
+revision_rationale:
+  required: true
+  include:
+    - problematic_pattern
+    - agency_restored
+    - language_change
+    - remaining_manual_review
+

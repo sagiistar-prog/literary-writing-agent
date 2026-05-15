@@ -1,0 +1,55 @@
+outline_rules:
+  require_title_options: true
+  require_logline: true
+  require_theme: true
+  require_character_desire: true
+  require_central_conflict: true
+  require_three_act_structure: true
+  require_chapter_outline: true
+  require_scene_seeds: true
+
+inspiration_rules:
+  premise_variations: 4
+  image_seeds: 6
+  setting_seeds: 4
+  character_contradictions: 4
+  conflict_seeds: 5
+  opening_scene_ideas: 4
+  symbolic_motifs: 5
+  questions_for_writer: 6
+
+scene_revision_rules:
+  preserve_core_event: true
+  strengthen_scene_purpose: true
+  add_sensory_specificity: true
+  deepen_emotional_subtext: true
+  avoid_overexplaining: true
+  include_revision_notes: true
+
+prose_texture_rules:
+  use_selective_images: true
+  vary_sentence_length: true
+  include_material_details: true
+  favor_character_perception: true
+  avoid_purple_prose: true
+
+originality_rules:
+  no_living_author_imitation: true
+  no_protected_source_text: true
+  no_style_cloning: true
+  original_examples_only: true
+  transform_user_premise_without_copying_known_works: true
+
+risk_notes:
+  - Check whether the outline depends too heavily on familiar genre templates.
+  - Check whether images serve the scene rather than decorate it.
+  - Check whether the protagonist has agency in each chapter.
+  - Check whether revision keeps the user's intended emotional center.
+
+manual_review_required:
+  - final_plot_structure
+  - sensitive_subject_matter
+  - cultural_context
+  - quoted_material
+  - character_subjectivity
+
