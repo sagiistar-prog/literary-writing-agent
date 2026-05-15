@@ -138,8 +138,9 @@ function Test-GitSync {
         return
     }
 
-    $counts = & git -c "safe.directory=$Root" rev-list --left-right --count HEAD...@{u}
-    if ($LASTEXITCODE -ne 0 -or -not $counts) {
+    $syncResult = Invoke-Git "rev-list" "--left-right" "--count" "HEAD...@{u}"
+    $counts = $syncResult.Output
+    if ($syncResult.Code -ne 0 -or -not $counts) {
         Add-Warning "Could not compare local and remote history."
         return
     }
