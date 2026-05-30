@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Literary Writing Agent</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="studio-shell">
+      <aside class="author-rail" aria-label="Author workspace navigation">
+        <section class="identity-block">
+          <span class="identity-mark" aria-hidden="true">L</span>
+          <div>
+            <h1>Literary Writing Agent</h1>
+            <p>Author Studio</p>
+          </div>
+        </section>
+
+        <section class="project-panel" aria-label="Project library">
+          <div class="panel-title-row">
+            <h2>创作库</h2>
+            <button id="new-project" class="icon-button" type="button" title="新建项目">+</button>
+          </div>
+          <label class="compact-field">
+            <span>作品名</span>
+            <input id="project-title" type="text" maxlength="80" />
+          </label>
+          <div class="project-actions">
+            <button id="save-project" class="primary-button" type="button">保存</button>
+            <button id="export-project" class="secondary-button" type="button">导出</button>
+          </div>
+          <select id="project-list" class="project-select" aria-label="Saved projects"></select>
+        </section>
+
+        <nav class="task-tabs" aria-label="Task mode">
+          <button class="task-tab is-active" type="button" data-task="outline">
+            <span class="tab-kicker">01</span>
+            <span>大纲</span>
+          </button>
+          <button class="task-tab" type="button" data-task="inspiration">
+            <span class="tab-kicker">02</span>
+            <span>灵感</span>
+          </button>
+          <button class="task-tab" type="button" data-task="revision">
+            <span class="tab-kicker">03</span>
+            <span>润色</span>
+          </button>
+          <button class="task-tab" type="button" data-task="male_gaze">
+            <span class="tab-kicker">04</span>
+            <span>主体视角</span>
+          </button>
+        </nav>
+
+        <section class="ethics-card">
+          <h2>边界</h2>
+          <p>原创辅助，不做风格克隆；临时输入默认只留在本机浏览器。</p>
+        </section>
+      </aside>
+
+      <section class="studio-main">
+        <header class="site-masthead">
+          <div class="masthead-copy">
+            <p class="eyebrow">Writer's Desk</p>
+            <h2 id="task-title">小说大纲编撰</h2>
+          </div>
+          <div class="masthead-actions">
+            <button id="load-sample" class="secondary-button" type="button">示例</button>
+            <button id="run-audit" class="secondary-button" type="button">审计</button>
+            <button id="generate" class="primary-button" type="button">生成</button>
+          </div>
+        </header>
+
+        <div id="status-line" class="status-line" role="status">本机创作台已就绪。</div>
+
+        <section class="desk-layout">
+          <div class="manuscript-board">
+            <div class="board-head">
+              <div>
+                <p class="eyebrow">Draft</p>
+                <h3>创作台</h3>
+              </div>
+              <span id="task-hint">故事简述</span>
+            </div>
+
+            <label class="field-block" data-field="brief">
+              <span>故事简述</span>
+              <textarea id="brief-input" spellcheck="false"></textarea>
+            </label>
+
+            <label class="field-block is-hidden" data-field="character">
+              <span>人物种子</span>
+              <textarea id="character-input" spellcheck="false"></textarea>
+            </label>
+
+            <label class="field-block is-hidden" data-field="scene">
+              <span>场景草稿</span>
+              <textarea id="scene-input" spellcheck="false"></textarea>
+            </label>
+          </div>
+
+          <aside class="right-stack">
+            <section class="illustration-board">
+              <div class="board-head compact">
+                <div>
+                  <p class="eyebrow">Images</p>
+                  <h3>插图板</h3>
+                </div>
+                <label class="upload-button">
+                  添加
+                  <input id="image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple />
+                </label>
+              </div>
+              <div id="image-gallery" class="image-gallery"></div>
+            </section>
+
+            <section class="note-board">
+              <div class="board-head compact">
+                <div>
+                  <p class="eyebrow">Notes</p>
+                  <h3>创作札记</h3>
+                </div>
+              </div>
+              <textarea id="notes-input" spellcheck="false"></textarea>
+            </section>
+          </aside>
+        </section>
+
+        <section class="output-board" aria-label="Generated output">
+          <div class="board-head">
+            <div>
+              <p class="eyebrow">Agent Output</p>
+              <h3>生成稿</h3>
+            </div>
+            <div class="output-actions">
+              <button id="copy-output" class="secondary-button" type="button">复制</button>
+              <button id="download-output" class="secondary-button" type="button">下载</button>
+            </div>
+          </div>
+          <article id="output" class="markdown-output">
+            <p class="empty-state">稿纸是空的。</p>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

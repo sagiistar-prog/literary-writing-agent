@@ -129,3 +129,23 @@ powershell -ExecutionPolicy Bypass -File scripts\portfolio_audit.ps1
 ```text
 AUDIT RESULT: PASS
 ```
+
+## 本地前端小软件
+
+可以启动一个本地 Web 创作台，在浏览器里使用 Agent 的四个能力：小说大纲、灵感生成、场景润色和去男性凝视改写。界面包含作者创作台、本地作品库、保存、导出、插图板、创作札记和审计入口。前端输入只发送给本机服务处理，不会默认写入仓库文件；作品保存使用浏览器本地存储。
+
+```powershell
+py -3 scripts\serve_app.py
+```
+
+启动后打开：
+
+```text
+http://127.0.0.1:8765
+```
+
+也可以先做一次本地检查：
+
+```powershell
+py -3 scripts\serve_app.py --check
+```
