@@ -33,6 +33,10 @@ const state = {
   outputText: "",
   projectId: "",
   images: [],
+  dirty: false,
+  busy: false,
+  outputs: {},
+  outputTask: "outline",
 };
 
 const elements = {
@@ -153,9 +157,10 @@ async function requestJson(url, options = {}) {
   const response = await fetch(url, {
     headers: { "Content-Type": "application/json" },
     ...options,
+    signal: AbortSignal.timeout(60000),
   });
   const data = await response.json();
-  if (!response.ok || data.ok === false) {
+  if (!response.ok || (data.ok === false && !data.output)) {
     throw new Error(data.error || "Request failed.");
   }
   return data;
@@ -185,6 +190,8 @@ function currentProjectPayload() {
     scene: elements.inputs.scene.value,
     notes: elements.notes.value,
     output: state.outputText,
+    outputs: state.outputs,
+    outputTask: state.outputTask,
     images: state.images,
     updatedAt: new Date().toISOString(),
   };
@@ -211,7 +218,9 @@ function saveCurrentProject() {
   const project = currentProjectPayload();
   const projects = loadProjects().filter((item) => item.id !== project.id);
   projects.push(project);
-  saveProjects(projects);
+  try { saveProjects(projects); }
+  catch { setStatus("浏览器空间不足或禁止存储。草稿仍在，请先导出作品包再整理插图。", "error"); return false; }
+  state.dirty = false;
   state.projectId = project.id;
   refreshProjectList();
   elements.projectList.value = project.id;
@@ -224,7 +233,10 @@ function loadProject(id) {
     return;
   }
 
+  if (!canReplaceDraft()) { elements.projectList.value = state.projectId; return; }
+  state.dirty = false;
   state.projectId = project.id;
+  state.outputs = project.outputs || { [project.outputTask || project.task || "outline"]: project.output || "" };
   state.outputText = project.output || "";
   state.images = Array.isArray(project.images) ? project.images : [];
   elements.projectTitle.value = project.title || "";
@@ -239,6 +251,9 @@ function loadProject(id) {
 }
 
 function newProject() {
+  if (!canReplaceDraft()) return;
+  state.outputs = {};
+  state.dirty = false;
   state.projectId = "";
   state.outputText = "";
   state.images = [];
@@ -263,13 +278,18 @@ function exportCurrentProject() {
 }
 
 function setTask(task, options = {}) {
+  if (state.busy || !TASKS[task]) return;
   state.task = task;
+  state.outputTask = task;
+  state.outputText = state.outputs[task] || "";
+  renderOutput();
   const config = TASKS[task];
   elements.title.textContent = config.title;
   elements.hint.textContent = config.hint;
 
   elements.tabs.forEach((tab) => {
     tab.classList.toggle("is-active", tab.dataset.task === task);
+    tab.setAttribute("aria-pressed", String(tab.dataset.task === task));
   });
 
   Object.entries(elements.fields).forEach(([name, field]) => {
@@ -282,10 +302,15 @@ function setTask(task, options = {}) {
 }
 
 async function loadExamples() {
+  if (!canReplaceDraft()) return;
+  const oldVersion = draftVersion;
   if (!state.examples) {
     state.examples = await requestJson("/api/examples");
   }
 
+  if (draftVersion !== oldVersion) { setStatus("已保留载入期间的新输入，请再次载入示例。"); return; }
+  state.projectId = ""; state.outputs = {}; state.outputText = ""; state.images = [];
+  state.dirty = true; renderOutput(); renderImages(); elements.projectList.value = "";
   elements.projectTitle.value = "雨图修复师";
   elements.inputs.brief.value = state.examples.storyBrief;
   elements.inputs.character.value = state.examples.characterSeed;
@@ -304,6 +329,9 @@ function currentPayload() {
 }
 
 async function generate() {
+  if (state.busy) return;
+  const submittedTask = state.task;
+  setBusy(true);
   setStatus("正在生成...");
   elements.generate.disabled = true;
   try {
@@ -312,12 +340,15 @@ async function generate() {
       body: JSON.stringify(currentPayload()),
     });
     state.outputText = data.result;
+    state.outputs[submittedTask] = data.result;
+    state.outputTask = submittedTask;
+    state.dirty = true;
     renderOutput();
     setStatus("生成完成。", "ok");
   } catch (error) {
     setStatus(error.message, "error");
   } finally {
-    elements.generate.disabled = false;
+    setBusy(false);
   }
 }
 
@@ -329,8 +360,9 @@ async function runAudit() {
       method: "POST",
       body: JSON.stringify({}),
     });
-    state.outputText = data.output;
-    elements.output.innerHTML = `<pre>${escapeHtml(data.output)}</pre>`;
+    const audit = document.querySelector("#audit-output");
+    audit.textContent = data.output;
+    document.querySelector("#audit-panel").open = true;
     setStatus(data.ok ? "审计通过。" : "审计未通过，请查看输出。", data.ok ? "ok" : "error");
   } catch (error) {
     setStatus(error.message, "error");
@@ -350,8 +382,8 @@ async function copyOutput() {
     setStatus("当前没有可复制的输出。", "error");
     return;
   }
-  await navigator.clipboard.writeText(state.outputText);
-  setStatus("输出已复制。", "ok");
+  try { await navigator.clipboard.writeText(state.outputText); setStatus("输出已复制。", "ok"); }
+  catch { setStatus("无法访问剪贴板，请使用下载保存生成稿。", "error"); }
 }
 
 function downloadBlob(blob, filename) {
@@ -371,7 +403,7 @@ function downloadOutput() {
     return;
   }
   const blob = new Blob([state.outputText], { type: "text/markdown;charset=utf-8" });
-  downloadBlob(blob, TASKS[state.task].filename);
+  downloadBlob(blob, TASKS[state.outputTask].filename);
   setStatus("输出已生成下载。", "ok");
 }
 
@@ -381,7 +413,10 @@ function addImages(files) {
     return;
   }
 
-  const readers = validFiles.slice(0, 8).map((file) => {
+  if (state.images.length + validFiles.length > 12) { setStatus("最多保留 12 张插图，请先导出或移除已有图片。", "error"); return; }
+  if (JSON.stringify(state.images).length + validFiles.reduce((total, file) => total + file.size * 1.4, 0) > 2000000) { setStatus("插图总量超过 2MB，请压缩图片；现有插图已保留。", "error"); return; }
+  const imageProject = state.projectId;
+  const readers = validFiles.map((file) => {
     return new Promise((resolve, reject) => {
       if (file.size > 1_500_000) {
         reject(new Error(`${file.name} 超过本地保存大小限制。`));
@@ -396,7 +431,9 @@ function addImages(files) {
 
   Promise.all(readers)
     .then((images) => {
-      state.images = [...state.images, ...images].slice(-12);
+      if (state.projectId !== imageProject) return;
+      state.images = [...state.images, ...images];
+      state.dirty = true;
       renderImages();
       setStatus("插图已加入创作台。", "ok");
     })
@@ -404,6 +441,7 @@ function addImages(files) {
 }
 
 function removeImage(id) {
+  state.dirty = true;
   state.images = state.images.filter((image) => image.id !== id);
   renderImages();
   setStatus("插图已移除。", "ok");
@@ -428,7 +466,7 @@ function renderImages() {
 }
 
 elements.tabs.forEach((tab) => tab.addEventListener("click", () => setTask(tab.dataset.task)));
-elements.loadSample.addEventListener("click", loadExamples);
+elements.loadSample.addEventListener("click", () => loadExamples().catch(error => setStatus(error.message, "error")));
 elements.generate.addEventListener("click", generate);
 elements.runAudit.addEventListener("click", runAudit);
 elements.copyOutput.addEventListener("click", copyOutput);
@@ -450,4 +488,20 @@ elements.imageGallery.addEventListener("click", (event) => {
 
 refreshProjectList();
 renderImages();
-loadExamples().catch((error) => setStatus(error.message, "error"));
+setStatus("从一段原创构想开始，或载入公开示例。生成器使用离线模板。");
+
+let draftVersion = 0;
+function canReplaceDraft() {
+  return !state.busy && (!state.dirty || window.confirm('这会替换未保存的草稿。确定放弃修改吗？选择取消可先保存或导出。'));
+}
+function setBusy(value) {
+  state.busy = value;
+  for (const control of [...elements.tabs, elements.generate, elements.loadSample, elements.newProject, elements.projectList, ...Object.values(elements.inputs), elements.projectTitle, elements.notes, elements.imageInput]) control.disabled = value;
+  elements.output.setAttribute('aria-busy', String(value));
+}
+for (const input of [...Object.values(elements.inputs), elements.projectTitle, elements.notes]) input.addEventListener('input', () => { state.dirty = true; draftVersion += 1; });
+window.addEventListener('beforeunload', event => { if (state.dirty) { event.preventDefault(); event.returnValue = ''; } });
+document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !event.isComposing) { event.preventDefault(); void generate(); } });
+
+const libraryDisclosure = document.querySelector('.project-panel');
+if (libraryDisclosure) libraryDisclosure.open = !window.matchMedia('(max-width:760px)').matches;

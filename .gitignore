@@ -14,3 +14,11 @@ raw
 *.wav
 *.mp3
 
+
+output/
+
+__pycache__/
+
+.impeccable/
+
+test-results/

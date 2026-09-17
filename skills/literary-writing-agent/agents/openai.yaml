@@ -1,0 +1,4 @@
+interface:
+  display_name: "literary-writing-agent"
+  short_description: "Help an author develop outlines, character ideas and revisions while preserving the original draft. "
+  default_prompt: "Use $literary-writing-agent to help complete the task with traceable inputs and reviewable outputs."

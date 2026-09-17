@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Literary Writing Studio input",
+  "type": "object",
+  "properties": {
+    "task": {
+      "enum": [
+        "outline",
+        "inspiration",
+        "revision",
+        "male_gaze"
+      ]
+    },
+    "brief": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30000
+    },
+    "character": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30000
+    },
+    "scene": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30000
+    }
+  },
+  "required": [
+    "task"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "task": {
+            "const": "outline"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "brief"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "task": {
+            "const": "inspiration"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "brief",
+          "character"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "task": {
+            "const": "revision"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "scene"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "task": {
+            "const": "male_gaze"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "scene"
+        ]
+      }
+    }
+  ]
+}

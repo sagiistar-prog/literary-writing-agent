@@ -1,4 +1,23 @@
-# Literary Writing Agent
+# Literary Writing Studio
+
+
+[产品案例与指标](docs/product-case.md) | [能力证据](docs/capability-evidence.json) | [验收与边界](docs/validation.md)
+
+## 面试官 30 秒版
+
+演示原创写作结构、修订理由与主体视角检查。创作工具首先保护草稿。切换和载入不能默默覆盖未保存文字；检查输出与生成稿分离，每种任务保留自己的结果。
+
+当前可验证能力：**offline_template**。固定模板展示写作框架；不是可泛化的 AI 写作模型。 输出需作者审阅，不模仿在世作者的具体文风。
+
+[插件使用与产品取舍](docs/plugin.md) · [输入示例](examples/plugin-input.json) · [输入契约](schemas/input.schema.json) · [维护记录](CHANGELOG.md)
+
+```bash
+python -m pip install -r requirements-plugin.txt
+python scripts/plugin_run.py --input examples/plugin-input.json
+```
+
+## 原有工作流与详细说明
+
 
 Literary Writing Agent 是一个原创文学写作辅助 Agent 作品集项目，用于帮助作者从早期灵感走到可修改的大纲、人物、场景和章节计划。它强调原创写作支持，而不是风格复制。
 

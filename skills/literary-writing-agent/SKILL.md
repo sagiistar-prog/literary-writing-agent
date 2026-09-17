@@ -46,3 +46,15 @@ When revising objectifying description:
 - restore desire, judgment, and choice
 - reframe sensory detail through the character's lived experience
 - preserve literary ambiguity and rhythm
+
+## Versioned plugin interface
+
+Use the repository root as the working directory. For an installed plugin, resolve the root as two directories above this SKILL.md; never assume the user's project contains the bundled scripts.
+
+1. Read `schemas/input.schema.json` before constructing input. Use `examples/plugin-input.json` for an offline demonstration.
+2. Install `requirements-plugin.txt` into the user's chosen Python environment when needed.
+3. Run `python scripts/plugin_run.py --input examples/plugin-input.json` from the plugin root. For user text, pass a JSON object through stdin; do not interpolate it into a shell command.
+4. Parse stdout as one JSON object; exit 0 means success, exit 2 means an input/output/dependency error. Show the error and preserve the input rather than retrying indefinitely.
+5. Present the Markdown result and material warnings. When the user asks to save artifacts, add `--output-dir output/<new-run-name>`. This creates files; an existing directory is never overwritten.
+
+The plugin does not grant permission to read unrelated files, publish content, run rendering or access accounts. The original CLI remains available. See `docs/plugin.md` for the capability boundary and the structured error contract.
