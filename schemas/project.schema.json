@@ -1,0 +1,187 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 80
+    },
+    "task": {
+      "enum": [
+        "outline",
+        "inspiration",
+        "revision",
+        "male_gaze"
+      ]
+    },
+    "brief": {
+      "type": "string",
+      "maxLength": 30000
+    },
+    "character": {
+      "type": "string",
+      "maxLength": 30000
+    },
+    "scene": {
+      "type": "string",
+      "maxLength": 30000
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 6000
+    },
+    "output": {
+      "type": "string",
+      "maxLength": 1000000
+    },
+    "outputs": {
+      "type": "object",
+      "properties": {
+        "outline": {
+          "type": "string",
+          "maxLength": 1000000
+        },
+        "inspiration": {
+          "type": "string",
+          "maxLength": 1000000
+        },
+        "revision": {
+          "type": "string",
+          "maxLength": 1000000
+        },
+        "male_gaze": {
+          "type": "string",
+          "maxLength": 1000000
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "outputTask": {
+      "enum": [
+        "outline",
+        "inspiration",
+        "revision",
+        "male_gaze"
+      ]
+    },
+    "images": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "dataUrl": {
+            "type": "string",
+            "maxLength": 2000000
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "dataUrl"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "reviews": {
+      "type": "object",
+      "properties": {
+        "outline": {
+          "$ref": "#/$defs/review"
+        },
+        "inspiration": {
+          "$ref": "#/$defs/review"
+        },
+        "revision": {
+          "$ref": "#/$defs/review"
+        },
+        "male_gaze": {
+          "$ref": "#/$defs/review"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "updatedAt": {
+      "type": "string",
+      "maxLength": 100
+    }
+  },
+  "required": [
+    "title",
+    "task",
+    "brief",
+    "character",
+    "scene",
+    "notes"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Portable Literary Writing Studio project",
+  "$defs": {
+    "review": {
+      "type": "object",
+      "properties": {
+        "signature": {
+          "type": "string",
+          "maxLength": 250000
+        },
+        "session": {
+          "type": "object"
+        },
+        "choices": {
+          "type": "object",
+          "maxProperties": 100,
+          "propertyNames": {
+            "pattern": "^E[0-9]{1,4}$"
+          },
+          "additionalProperties": {
+            "enum": [
+              "accepted",
+              "rejected"
+            ]
+          }
+        },
+        "history": {
+          "type": "array",
+          "maxItems": 5000,
+          "items": {
+            "type": "object",
+            "maxProperties": 100,
+            "propertyNames": {
+              "pattern": "^E[0-9]{1,4}$"
+            },
+            "additionalProperties": {
+              "enum": [
+                "accepted",
+                "rejected"
+              ]
+            }
+          }
+        }
+      },
+      "required": [
+        "signature",
+        "session",
+        "choices",
+        "history"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

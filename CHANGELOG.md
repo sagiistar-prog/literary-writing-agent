@@ -1,5 +1,12 @@
 # Maintenance log
 
+## 0.4.0 — 2026-09-19
+
+- Added portable project import and validation for browser saves, preserving drafts, task records, selections, undo history and embedded raster illustrations.
+- Recompute reviewed output from original inputs and author choices; reject corrupted references and leave stale suggestions inactive.
+- Imported projects save as new copies. Invalid files, failed requests and cancelled replacements preserve current work.
+- Added cross-browser recovery checks at desktop and mobile widths, and removed the empty space left by a collapsed illustration board.
+
 ## 0.3.0 — 2026-09-18
 
 - Removed fixed story outputs; host-authored proposals now bind to the exact active input and instructions.

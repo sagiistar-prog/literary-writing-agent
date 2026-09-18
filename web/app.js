@@ -38,6 +38,7 @@ const state = {
   busy: false,
   outputs: {},
   outputTask: "outline",
+  projectEpoch: 0,
 };
 
 const elements = {
@@ -77,15 +78,6 @@ function setStatus(message, type = "") {
   elements.status.classList.toggle("is-ok", type === "ok");
 }
 
-function escapeHtml(value) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 async function requestJson(url, options = {}) {
   const response = await fetch(url, {
     headers: { "Content-Type": "application/json" },
@@ -103,7 +95,7 @@ function loadProjects() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const projects = raw ? JSON.parse(raw) : [];
-    return Array.isArray(projects) ? projects : [];
+    return Array.isArray(projects) ? projects.filter(p => p && typeof p === 'object' && typeof p.id === 'string' && typeof p.title === 'string' && typeof p.updatedAt === 'string') : [];
   } catch {
     return [];
   }
@@ -115,6 +107,7 @@ function saveProjects(projects) {
 
 function currentProjectPayload() {
   return {
+    schema_version: "1.0",
     id: state.projectId || crypto.randomUUID(),
     title: elements.projectTitle.value.trim() || "未命名作品",
     task: state.task,
@@ -161,15 +154,20 @@ function saveCurrentProject() {
   setStatus("作品已保存到本机浏览器。", "ok");
 }
 
-function loadProject(id) {
+async function loadProject(id) {
   const project = loadProjects().find((item) => item.id === id);
   if (!project) {
     return;
   }
 
-  if (!canReplaceDraft()) { elements.projectList.value = state.projectId; return; }
-  state.dirty = false;
-  state.projectId = project.id;
+  await restoreProject(project, false);
+}
+
+function applyProject(project, asCopy) {
+  state.projectEpoch += 1; draftVersion += 1;
+  state.dirty = asCopy;
+  state.projectId = asCopy ? "" : project.id;
+  state.task = project.task;
   state.outputs = project.outputs || { [project.outputTask || project.task || "outline"]: project.output || "" };
   state.outputText = project.output || "";
   state.images = Array.isArray(project.images) ? project.images : [];
@@ -178,15 +176,32 @@ function loadProject(id) {
   elements.inputs.character.value = project.character || "";
   elements.inputs.scene.value = project.scene || "";
   elements.notes.value = project.notes || "";
+  elements.projectList.value = state.projectId;
   review.restore(project.reviews);
   setTask(project.task || "outline", { preserveStatus: true });
   renderImages();
   renderOutput();
-  setStatus("已打开本机保存的作品。", "ok");
+}
+
+async function restoreProject(data, asCopy) {
+  if (state.busy) return;
+  setBusy(true); setStatus('正在校验作品包…');
+  try {
+    const {project} = await requestJson('/api/project/validate', {method:'POST', body:JSON.stringify(data)});
+    if (state.dirty && !window.confirm('这会替换未保存的草稿。确定放弃修改吗？选择取消可先保存或导出。')) {
+      elements.projectList.value = state.projectId; setStatus('已保留当前草稿。'); return;
+    }
+    applyProject(project, asCopy);
+    setStatus(asCopy ? '作品包已打开。保存后会成为一份新作品。' : '已打开本机保存的作品。', 'ok');
+  } catch(error) {
+    elements.projectList.value = state.projectId;
+    setStatus((error.message || '作品包无法读取。')+' 当前草稿已保留。', 'error');
+  } finally { setBusy(false); setTask(state.task, {preserveStatus:true}); }
 }
 
 function newProject() {
   if (!canReplaceDraft()) return;
+  state.projectEpoch += 1; draftVersion += 1;
   state.outputs = {};
   review.restore({});
   state.dirty = false;
@@ -208,6 +223,7 @@ function exportCurrentProject() {
   const project = currentProjectPayload();
   const content = JSON.stringify(project, null, 2);
   const blob = new Blob([content], { type: "application/json;charset=utf-8" });
+  if (blob.size > 8000000) { setStatus('作品包超过 8 MB，请先下载稿件，再移除部分插图后重试。', 'error'); return; }
   const safeTitle = project.title.replace(/[^\w\u4e00-\u9fa5-]+/g, "-").slice(0, 60) || "project";
   downloadBlob(blob, `${safeTitle}.json`);
   setStatus("作品包已导出。", "ok");
@@ -245,6 +261,7 @@ async function loadExamples() {
   }
 
   if (draftVersion !== oldVersion) { setStatus("已保留载入期间的新输入，请再次载入示例。"); return; }
+  state.projectEpoch += 1; draftVersion += 1;
   review.restore({});
   state.projectId = ""; state.outputs = {}; state.outputText = ""; state.images = [];
   state.dirty = true; renderOutput(); renderImages(); elements.projectList.value = "";
@@ -326,14 +343,15 @@ function downloadOutput() {
 }
 
 function addImages(files) {
-  const validFiles = [...files].filter((file) => file.type.startsWith("image/"));
+  const validFiles = [...files].filter((file) => ['image/png','image/jpeg','image/webp','image/gif'].includes(file.type));
+  if (validFiles.length !== files.length) { setStatus('请选择 PNG、JPEG、WebP 或 GIF 插图。', 'error'); return; }
   if (!validFiles.length) {
     return;
   }
 
   if (state.images.length + validFiles.length > 12) { setStatus("最多保留 12 张插图，请先导出或移除已有图片。", "error"); return; }
   if (JSON.stringify(state.images).length + validFiles.reduce((total, file) => total + file.size * 1.4, 0) > 2000000) { setStatus("插图总量超过 2MB，请压缩图片；现有插图已保留。", "error"); return; }
-  const imageProject = state.projectId;
+  const imageProject = state.projectEpoch;
   const readers = validFiles.map((file) => {
     return new Promise((resolve, reject) => {
       if (file.size > 1_500_000) {
@@ -349,7 +367,7 @@ function addImages(files) {
 
   Promise.all(readers)
     .then((images) => {
-      if (state.projectId !== imageProject) return;
+      if (state.projectEpoch !== imageProject) return;
       state.images = [...state.images, ...images];
       state.dirty = true;
       renderImages();
@@ -359,6 +377,7 @@ function addImages(files) {
 }
 
 function removeImage(id) {
+  if (state.busy) return;
   state.dirty = true;
   state.images = state.images.filter((image) => image.id !== id);
   renderImages();
@@ -371,16 +390,14 @@ function renderImages() {
     return;
   }
 
-  elements.imageGallery.innerHTML = state.images
-    .map(
-      (image) => `
-        <figure class="image-card">
-          <img src="${image.dataUrl}" alt="${escapeHtml(image.name)}" />
-          <button type="button" data-remove-image="${image.id}" title="移除插图">×</button>
-        </figure>
-      `,
-    )
-    .join("");
+  elements.imageGallery.replaceChildren();
+  for (const image of state.images) {
+    const figure = document.createElement('figure'); figure.className = 'image-card';
+    const img = document.createElement('img'); img.src = image.dataUrl; img.alt = image.name;
+    const button = document.createElement('button'); button.type = 'button';
+    button.dataset.removeImage = image.id; button.title = '移除插图'; button.textContent = '×';
+    figure.append(img, button); elements.imageGallery.append(figure);
+  }
 }
 
 elements.tabs.forEach((tab) => tab.addEventListener("click", () => setTask(tab.dataset.task)));
@@ -392,6 +409,20 @@ elements.downloadOutput.addEventListener("click", downloadOutput);
 elements.saveProject.addEventListener("click", saveCurrentProject);
 elements.newProject.addEventListener("click", newProject);
 elements.exportProject.addEventListener("click", exportCurrentProject);
+document.getElementById('import-project-button').addEventListener('click', () => document.getElementById('import-project').click());
+document.getElementById('import-project').addEventListener('change', async event => {
+  const file = event.target.files[0]; event.target.value = '';
+  if (!file || state.busy) return;
+  const epoch = state.projectEpoch, version = draftVersion;
+  if (file.size > 8000000) { setStatus('作品包超过 8 MB，当前草稿已保留。', 'error'); return; }
+  let data;
+  try { data = JSON.parse(await file.text()); }
+  catch { setStatus('作品包不是有效 JSON，当前草稿已保留。', 'error'); return; }
+  if (state.busy || state.projectEpoch !== epoch || draftVersion !== version) {
+    setStatus('已保留读取期间的修改，请重新选择作品包。'); return;
+  }
+  await restoreProject(data, true);
+});
 elements.projectList.addEventListener("change", (event) => loadProject(event.target.value));
 elements.imageInput.addEventListener("change", (event) => {
   addImages(event.target.files || []);
@@ -433,6 +464,7 @@ document.getElementById('try-review').addEventListener('click', () => {
   if (!canReplaceDraft()) return;
   void reviewAction(async () => {
     const data = await requestJson('/api/examples');
+    state.projectEpoch += 1; draftVersion += 1;
     state.projectId = ''; state.outputs = {}; state.images = [];
     elements.projectTitle.value = '末班渡船'; elements.projectList.value = '';
     elements.inputs.brief.value = ''; elements.inputs.character.value = '';
@@ -455,6 +487,8 @@ function canReplaceDraft() {
 }
 function setBusy(value) {
   state.busy = value;
+  document.getElementById('import-project-button').disabled = value;
+  document.getElementById('import-project').disabled = value;
   for (const control of [...elements.tabs, elements.generate, elements.loadSample, elements.newProject, elements.projectList, ...Object.values(elements.inputs), elements.projectTitle, elements.notes, elements.imageInput, elements.saveProject, elements.exportProject, document.getElementById('try-review'), document.getElementById('import-proposal')]) control.disabled = value;
   for (const control of elements.output.querySelectorAll('button')) control.disabled = value || (control.textContent === '撤销上一步' && !review.current()?.history.length);
   elements.output.setAttribute('aria-busy', String(value));

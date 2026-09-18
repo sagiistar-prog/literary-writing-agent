@@ -16,6 +16,7 @@ MAX_BODY_BYTES = 1_000_000
 sys.path.insert(0, str(ROOT))
 
 from scripts.writing_session import run_session
+from scripts.project_bundle import validate_project
 
 
 def read_repo_file(relative_path: str) -> str:
@@ -98,6 +99,9 @@ class AppHandler(BaseHTTPRequestHandler):
             return
         parsed = urlparse(self.path)
         try:
+            if parsed.path == "/api/project/validate":
+                self.send_json({"ok": True, "project": validate_project(self.read_json_body(8_000_000))})
+                return
             if parsed.path == "/api/session":
                 self.send_json({"ok": True, "session": run_session(self.read_json_body())})
                 return
@@ -116,9 +120,9 @@ class AppHandler(BaseHTTPRequestHandler):
         except Exception as error:  # pragma: no cover - last-resort local server guard.
             self.send_json({"ok": False, "error": "生成失败，请检查输入后重试。"}, status=500)
 
-    def read_json_body(self) -> dict[str, object]:
+    def read_json_body(self, maximum=MAX_BODY_BYTES) -> dict[str, object]:
         length = int(self.headers.get("Content-Length", "0"))
-        if not 0 < length <= MAX_BODY_BYTES:
+        if not 0 < length <= maximum:
             raise ValueError("Request body is too large.")
         raw = self.rfile.read(length)
         if not raw:

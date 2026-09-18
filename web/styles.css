@@ -166,11 +166,13 @@ p {
 }
 
 .project-actions {
+  margin-block: 10px;
   gap: 8px;
 }
 
 .project-actions button {
   flex: 1;
+  min-height: 44px;
 }
 
 .task-tabs {
@@ -646,7 +648,7 @@ button:active { transform: translateY(1px); }
 .stale-note { color: #854126; }
 .proposal-upload { display: inline-flex; align-items: center; min-height: 44px; }
 .illustration-board > summary { padding: 20px; cursor: pointer; font-size: 17px; font-weight: 600; }
-.illustration-board:not([open]) { align-self: start; }
+.illustration-board:not([open]) { align-self: start; min-height: 0; }
 #review-board { scroll-margin-top: 20px; }
 .proposal-upload:focus-within { outline: 2px solid var(--teal); outline-offset: 3px; }
 .proposal-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; display: block; }
