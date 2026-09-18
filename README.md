@@ -1,171 +1,61 @@
 # Literary Writing Studio
 
-[本轮技术验收](docs/technical-audit-2026-09-18.md)
+帮助小说作者尝试修改，同时保留自己的表达和原稿。宿主 AI 提出大纲、灵感和局部修订，本地插件校验原文定位，作者在修订台逐条采纳、保留或撤销，导出自己确认的稿件。
 
-[产品案例与指标](docs/product-case.md) | [能力证据](docs/capability-evidence.json) | [验收与边界](docs/validation.md)
+## 三分钟体验
 
-## 面试官 30 秒版
-
-演示原创写作结构、修订理由与主体视角检查。创作工具首先保护草稿。切换和载入不能默默覆盖未保存文字；检查输出与生成稿分离，每种任务保留自己的结果。
-
-当前可验证能力：**offline_template**。固定模板展示写作框架；不是可泛化的 AI 写作模型。 输出需作者审阅，不模仿在世作者的具体文风。
-
-[插件使用与产品取舍](docs/plugin.md) · [输入示例](examples/plugin-input.json) · [输入契约](schemas/input.schema.json) · [维护记录](CHANGELOG.md)
+需要 Python 3.10+。不需要数据库或模型密钥。
 
 ```bash
-python -m pip install -r requirements-plugin.txt
-python scripts/plugin_run.py --input examples/plugin-input.json
+python -m pip install -r requirements.txt
+python scripts/serve_app.py --port 8765
 ```
 
-## 原有工作流与详细说明
+打开终端显示的本机网址，点击 **试读修订**。采纳 E1、保留 E2，再撤销一步。**下载稿件**只包含当前选择后的正文，原稿不被覆盖。**保存**明确写入本机浏览器，关闭前也可导出作品包；浏览器存储不是云备份。
 
+![修订台](docs/screenshots/review-desktop.png)
 
-Literary Writing Agent 是一个原创文学写作辅助 Agent 作品集项目，用于帮助作者从早期灵感走到可修改的大纲、人物、场景和章节计划。它强调原创写作支持，而不是风格复制。
+## 用自己的材料
 
-## 面试官 30 秒版
+1. 选择大纲、灵感、润色或主体视角，填写相应材料及“这次想怎样调整”。
+2. 点击 **准备写作请求**，再 **导出请求**。把 JSON 交给已安装此插件的 AI 助手，要求按内附契约生成建议包。
+3. 用 **导入建议包**载入 JSON。修订任务逐条采纳或保留原文；大纲和灵感直接审阅完整提案及新增设定。
+4. 下载稿件或评审记录。原稿、任务或要求改变后，旧建议停止应用，需要重新准备。
 
-这个项目展示了一个面向原创小说创作的 Agent 工作流：输入故事简述、人物种子或场景草稿，输出小说大纲、灵感池、润色版本和去男性凝视改写建议。项目包含结构化写作规则、伦理边界、可运行的 Safe Demo、原创示例文本和公开仓库审计脚本，适合作为 AI Agent 产品思维、提示工程、安全边界和内容生成流程的作品集样例。
+本地网页不调用 LLM。没有 AI 宿主时，可以体验附带案例、管理稿件与审阅人工编写的建议包，但不会声称自动完成文学创作。插件宿主承担创造与语义判断，Python 承担可确定的定位与选择。项目不是通用 AI 写作模型。
 
-## 项目解决什么问题
+## 可运行插件
 
-许多写作者在小说早期会卡在四类问题上：
+插件入口：[.codex-plugin/plugin.json](.codex-plugin/plugin.json)，技能：[SKILL.md](skills/literary-writing-agent/SKILL.md)。输入输出是版本化 JSON，代码拒绝过期输入、找不到的原文、错误出现次数、重叠修改和未知采纳编号。
 
-- 只有气氛或主题，但缺少可展开的叙事结构。
-- 有角色设定，但角色欲望、冲突和章节推进不够清晰。
-- 场景文字有信息，但缺少感官细节、情绪暗流和文学节奏。
-- 女性角色容易被写成被观看、被评价、被功能化的对象。
-
-本项目把这些问题拆成可审阅、可迭代的 Agent 工作流，并用规则文件约束输出边界。
-
-## 输入和输出
-
-输入可以是：
-
-- `examples/sample_story_brief.md`：原创故事简述。
-- `examples/sample_character_seed.md`：原创人物种子。
-- `examples/sample_scene.md`：原创场景草稿。
-- `configs/*.yaml`：写作规则、伦理规则和偏好设置。
-
-输出包括：
-
-- `examples/generated_outline.md`：标题候选、logline、主题、人物欲望、三幕结构、章节大纲、场景种子和风险提示。
-- `examples/generated_inspirations.md`：前提变体、意象种子、场景种子、人物矛盾、冲突种子、开场方案、象征母题和追问。
-- `examples/generated_revision.md`：润色后的场景、修改说明、工艺选择、风险提示和原创性说明。
-- `examples/generated_male_gaze_revision.md`：问题模式、改写文本、主体性恢复说明、语言变化和 revision rationale。
-
-## 工作流阶段
-
-1. 读取故事简述、人物种子或场景草稿。
-2. 载入写作规则、伦理规则和用户偏好。
-3. 按任务生成结构化草案：大纲、灵感、场景润色或主体视角改写。
-4. 输出 revision notes，说明为什么这样改，而不只给出改写结果。
-5. 运行 Safe Demo 和作品集审计，确认公开仓库内容安全。
-
-## 原创小说大纲编撰能力
-
-`scripts/generate_outline.py` 会把故事简述整理为可继续创作的小说骨架，包括：
-
-- title options
-- logline
-- theme
-- main character
-- character desire
-- central conflict
-- world texture
-- three act structure
-- chapter outline
-- scene seeds
-- risk notes
-
-## 灵感生成能力
-
-`scripts/generate_inspiration.py` 会基于故事简述和人物种子生成非侵权、非复制式灵感池：
-
-- premise variations
-- image seeds
-- setting seeds
-- character contradictions
-- conflict seeds
-- opening scene ideas
-- symbolic motifs
-- questions for the writer
-
-## 场景润色能力
-
-`scripts/revise_scene.py` 会在保留原创意图的基础上强化：
-
-- 场景目的
-- 感官细节
-- 情绪潜台词
-- 叙事节奏
-- 散文化表达
-- 修订说明
-
-## 去男性凝视表达能力
-
-`scripts/remove_male_gaze.py` 会识别并改写把女性角色写成被观看对象的表达，重点恢复角色的行动、欲望、判断和主体经验。改写目标是保留文学性，而不是把文本变成机械口号。
-
-## 写作伦理边界
-
-- 不模仿任何在世作家的具体文风。
-- 不复制、改写或搬运受版权保护文本。
-- 不做风格克隆。
-- 只使用高层写作维度，例如叙事节奏、意象组织、自然描写、人物观察、情感留白、荒诞现实感、口语感、散文化表达、女性主体视角。
-- 如果用户要求模仿具体在世作者，Agent 应改为提供高层写作特征分析和原创替代方案。
-- 如果用户提供外部文本作为参考，仓库只保存抽象写作方法，不保存源段落、近似句式或独特比喻。
-
-## 公开仓库隐私说明
-
-本仓库是公开作品集项目，不包含真实私人文本、真实日记、真实商业资料、客户资料或内部项目资料。`examples/` 中的所有文本均为原创虚构示例，只用于演示 Agent 工作流。
-
-## Safe Demo
-
-这些命令不调用外部模型，也不读取私人材料。`--dry-run` 表示使用本地确定性模板生成公开演示输出。
-
-```powershell
-python scripts\generate_outline.py --input examples\sample_story_brief.md --output examples\generated_outline.md --rules configs\writing_rules.yaml --preferences configs\user_preferences.yaml --dry-run
-python scripts\generate_inspiration.py --brief examples\sample_story_brief.md --character examples\sample_character_seed.md --output examples\generated_inspirations.md --rules configs\writing_rules.yaml --preferences configs\user_preferences.yaml --dry-run
-python scripts\revise_scene.py --input examples\sample_scene.md --output examples\generated_revision.md --rules configs\writing_rules.yaml --ethics configs\style_ethics.yaml --preferences configs\user_preferences.yaml --dry-run
-python scripts\remove_male_gaze.py --input examples\sample_scene.md --output examples\generated_male_gaze_revision.md --rules configs\male_gaze_rules.yaml --dry-run
+```bash
+python scripts/plugin_run.py --input examples/revision-input.json --proposal examples/revision-proposal.json --output-dir output/first-review
 ```
 
-如果 `python` 不可用，可以使用 Windows Python Launcher：
+默认不采纳任何修改，输出 manuscript.txt 与原稿完全一致。作者明确选择后，在输入 JSON 中增加 `"accepted_edits": ["E1"]`，用新的输出目录重跑即可。详见 [插件协议](docs/plugin.md)。
 
-```powershell
-py -3 scripts\generate_outline.py --input examples\sample_story_brief.md --output examples\generated_outline.md --rules configs\writing_rules.yaml --preferences configs\user_preferences.yaml --dry-run
-py -3 scripts\generate_inspiration.py --brief examples\sample_story_brief.md --character examples\sample_character_seed.md --output examples\generated_inspirations.md --rules configs\writing_rules.yaml --preferences configs\user_preferences.yaml --dry-run
-py -3 scripts\revise_scene.py --input examples\sample_scene.md --output examples\generated_revision.md --rules configs\writing_rules.yaml --ethics configs\style_ethics.yaml --preferences configs\user_preferences.yaml --dry-run
-py -3 scripts\remove_male_gaze.py --input examples\sample_scene.md --output examples\generated_male_gaze_revision.md --rules configs\male_gaze_rules.yaml --dry-run
+## 四类原创案例
+
+| 任务 | 输入 | 提案 | 实际评审结果 |
+|---|---|---|---|
+| 场景修订 | [末班渡船](examples/revision-input.json) | [逐条建议](examples/revision-proposal.json) | [未采纳版本](examples/revision-review.md) |
+| 主体视角 | [修船棚](examples/agency-input.json) | [视角建议](examples/agency-proposal.json) | [理由与原稿](examples/agency-review.md) |
+| 大纲 | [失物清单](examples/outline-input.json) | [场景方案](examples/outline-proposal.json) | [完整大纲](examples/outline-review.md) |
+| 灵感 | [渡口售票员](examples/inspiration-input.json) | [两种方向](examples/inspiration-proposal.json) | [取舍与新增设定](examples/inspiration-review.md) |
+
+这些是明确标注的虚构提案，不是按关键词挑选的固定输出。旧版四个 CLI 保留，现只准备写作请求，不再返回与输入无关的样例故事。[旧命令](docs/safe-demo.md)
+
+## 产品与证据
+
+[用户问题和产品取舍](docs/product-case.md) | [工作流](docs/workflow.md) | [技术验收](docs/validation.md) | [独立技能试跑](docs/evaluation/skill-forward-test.md) | [开源选择](docs/open-source.md) | [维护记录](CHANGELOG.md)
+
+```bash
+python -m unittest discover -s tests -v
+python scripts/build_review_examples.py --check
+npm ci
+npx playwright install chromium
+npm run test:review
+powershell -ExecutionPolicy Bypass -File scripts/portfolio_audit.ps1
 ```
 
-运行作品集审计：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\portfolio_audit.ps1
-```
-
-审计通过时会输出：
-
-```text
-AUDIT RESULT: PASS
-```
-
-## 本地前端小软件
-
-可以启动一个本地 Web 创作台，在浏览器里使用 Agent 的四个能力：小说大纲、灵感生成、场景润色和去男性凝视改写。界面包含作者创作台、本地作品库、保存、导出、插图板、创作札记和审计入口。前端输入只发送给本机服务处理，不会默认写入仓库文件；作品保存使用浏览器本地存储。
-
-```powershell
-py -3 scripts\serve_app.py
-```
-
-启动后打开：
-
-```text
-http://127.0.0.1:8765
-```
-
-也可以先做一次本地检查：
-
-```powershell
-py -3 scripts\serve_app.py --check
-```
+所有公开示例原创虚构，不包含私人稿件。精确定位不等于文学质量或语义忠实；原创性与风格边界需要宿主和作者审阅。没有作者满意度或效率提升的实测结论。

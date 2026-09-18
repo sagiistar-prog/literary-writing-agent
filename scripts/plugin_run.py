@@ -11,28 +11,33 @@ sys.path.insert(0, str(ROOT / "scripts"))
 MAX_BYTES = 1_000_000
 
 def execute(data: dict) -> dict:
-    from serve_app import generate
-    return {"markdown": generate(data), "task": data["task"], "originality_review_required": True}
+    from writing_session import run_session
+    return run_session(data)
 
 
 def run(data: dict) -> dict:
     from jsonschema import Draft202012Validator
     schema = json.loads((ROOT / "schemas/input.schema.json").read_text(encoding="utf-8"))
     Draft202012Validator(schema).validate(data)
-    result = {"schema_version": "1.0", "status": "ok", "mode": 'offline_template', "result": execute(data), "warnings": ['固定模板展示写作框架；不是可泛化的 AI 写作模型。', '输出需作者审阅，不模仿在世作者的具体文风。']}
+    result = {"schema_version": "2.0", "status": "ok", "mode": 'author_review', "result": execute(data), "warnings": ['创作建议由宿主 AI 或作者提供，本地工具校验定位并应用作者选择。', '输出需作者审阅，不模仿在世作者的具体文风。']}
     Draft202012Validator(json.loads((ROOT / "schemas/output.schema.json").read_text(encoding="utf-8"))).validate(result)
     return result
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description='演示原创写作结构、修订理由与主体视角检查')
+    parser = argparse.ArgumentParser(description='校验原创写作建议并应用作者确认的修改')
     parser.add_argument("--input", type=Path, help="UTF-8 JSON file. Omit to read stdin.")
     parser.add_argument("--output-dir", type=Path, help="New directory inside output/. Existing directories are never overwritten.")
+    parser.add_argument("--proposal", type=Path, help="Host-authored suggestion JSON")
     args = parser.parse_args()
     try:
         if args.input and args.input.stat().st_size > MAX_BYTES: raise ValueError("Input exceeds 1 MB")
         raw = args.input.read_text(encoding="utf-8-sig") if args.input else sys.stdin.buffer.read(MAX_BYTES + 1).decode("utf-8-sig")
         if len(raw.encode("utf-8")) > MAX_BYTES: raise ValueError("Input exceeds 1 MB")
         data = json.loads(raw, parse_constant=lambda value: (_ for _ in ()).throw(ValueError("Non-finite JSON number")))
+        if args.proposal:
+            if "proposal" in data: raise ValueError("Provide proposal either in input or --proposal, not both")
+            if args.proposal.stat().st_size > MAX_BYTES: raise ValueError("Proposal exceeds 1 MB")
+            data["proposal"] = json.loads(args.proposal.read_text(encoding="utf-8-sig"))
         payload = run(data)
         if args.output_dir:
             destination = args.output_dir.resolve()
@@ -42,10 +47,12 @@ def main() -> int:
             destination.mkdir(parents=True, exist_ok=False)
             (destination / "result.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             (destination / "result.md").write_text(payload["result"]["markdown"], encoding="utf-8")
-            if "csv" in payload["result"]: (destination / "timeline.csv").write_text(payload["result"]["csv"], encoding="utf-8")
+            (destination / "writing-request.json").write_text(json.dumps(payload["result"]["request"], ensure_ascii=False, indent=2), encoding="utf-8")
+            if payload["result"]["task"] in ("revision", "male_gaze"):
+                (destination / "manuscript.txt").write_text(payload["result"]["revised_scene"], encoding="utf-8", newline="")
         code = 0
     except ImportError:
-        payload = {"schema_version":"1.0", "status":"error", "error":{"code":"DEPENDENCY_MISSING", "message":"Install requirements-plugin.txt before running the plugin."}}
+        payload = {"schema_version":"2.0", "status":"error", "error":{"code":"DEPENDENCY_MISSING", "message":"Install requirements-plugin.txt before running the plugin."}}
         code = 2
     except Exception as exc:
         # Do not echo user text, stack traces or local file paths into the response.
@@ -56,7 +63,7 @@ def main() -> int:
             message = "Cannot read input or create a fresh output directory. Existing output is preserved."
         elif isinstance(exc, json.JSONDecodeError): message = "Input must be valid UTF-8 JSON."
         else: message = str(exc) if isinstance(exc, ValueError) else "Generation failed; check the documented input contract."
-        payload = {"schema_version":"1.0", "status":"error", "error":{"code":"INVALID_INPUT_OR_OUTPUT", "message":message}}
+        payload = {"schema_version":"2.0", "status":"error", "error":{"code":"INVALID_INPUT_OR_OUTPUT", "message":message}}
         code = 2
     sys.stdout.reconfigure(encoding="utf-8")
     print(json.dumps(payload, ensure_ascii=False, allow_nan=False))

@@ -1,0 +1,28 @@
+[
+  {
+    "width": 1440,
+    "errors": [],
+    "violations": [],
+    "selectionAndUndo": true,
+    "downloadMatches": true,
+    "saveReload": true,
+    "staleImportRejected": true,
+    "failedImportPreservesDraft": true,
+    "hostileTextSafe": true,
+    "outlineImport": true,
+    "requestMatches": true
+  },
+  {
+    "width": 390,
+    "errors": [],
+    "violations": [],
+    "selectionAndUndo": true,
+    "downloadMatches": true,
+    "saveReload": true,
+    "staleImportRejected": true,
+    "failedImportPreservesDraft": true,
+    "hostileTextSafe": true,
+    "outlineImport": true,
+    "requestMatches": true
+  }
+]

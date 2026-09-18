@@ -17,8 +17,8 @@ The goal is not to replace the writer. The Agent creates structured options, ask
 
 ## Key Product Decisions
 
-- Keep the Safe Demo deterministic and offline.
-- Store writing ethics as configuration and documentation, not only as prose in the README.
+- Keep validation and author-selected application deterministic and offline; creative proposals come from the host.
+- Document writing ethics as guidance for the host and author; do not claim a schema enforces literary ethics.
 - Include revision rationale so outputs remain inspectable.
 - Use original fictional examples only.
 - Treat female subjectivity as a craft requirement, not a decorative add-on.

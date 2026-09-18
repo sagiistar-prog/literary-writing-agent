@@ -1,5 +1,13 @@
 # Maintenance log
 
+## 0.3.0 — 2026-09-18
+
+- Removed fixed story outputs; host-authored proposals now bind to the exact active input and instructions.
+- Added precise, non-overlapping edits, independent author selections, undo, stale-input rejection and manuscript export.
+- Added four complete fictional proposal fixtures and an independently authored forward-test fixture.
+- Added real desktop/mobile browser regression and strengthened publishable-file auditing.
+- Protocol output changes to 2.0 / author_review; proposal format is 1.0. Legacy CLI names remain as request preparation commands.
+
 ## 0.2.0 — 2026-09-17
 
 - Added a versioned Codex plugin manifest with the existing Skill.

@@ -1,3 +1,4 @@
+import { WritingReview } from "./review.js";
 const STORAGE_KEY = "literary-writing-agent.projects.v1";
 
 const TASKS = {
@@ -85,74 +86,6 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function inlineFormat(value) {
-  return escapeHtml(value).replace(/`([^`]+)`/g, "<code>$1</code>");
-}
-
-function renderMarkdown(markdown) {
-  const lines = markdown.split(/\r?\n/);
-  const html = [];
-  let listType = null;
-
-  const closeList = () => {
-    if (listType) {
-      html.push(`</${listType}>`);
-      listType = null;
-    }
-  };
-
-  for (const rawLine of lines) {
-    const line = rawLine.trimEnd();
-    if (!line.trim()) {
-      closeList();
-      continue;
-    }
-
-    if (line.startsWith("### ")) {
-      closeList();
-      html.push(`<h3>${inlineFormat(line.slice(4))}</h3>`);
-      continue;
-    }
-    if (line.startsWith("## ")) {
-      closeList();
-      html.push(`<h2>${inlineFormat(line.slice(3))}</h2>`);
-      continue;
-    }
-    if (line.startsWith("# ")) {
-      closeList();
-      html.push(`<h1>${inlineFormat(line.slice(2))}</h1>`);
-      continue;
-    }
-
-    const ordered = line.match(/^(\d+)\.\s+(.+)/);
-    if (ordered) {
-      if (listType !== "ol") {
-        closeList();
-        listType = "ol";
-        html.push("<ol>");
-      }
-      html.push(`<li>${inlineFormat(ordered[2])}</li>`);
-      continue;
-    }
-
-    if (line.startsWith("- ")) {
-      if (listType !== "ul") {
-        closeList();
-        listType = "ul";
-        html.push("<ul>");
-      }
-      html.push(`<li>${inlineFormat(line.slice(2))}</li>`);
-      continue;
-    }
-
-    closeList();
-    html.push(`<p>${inlineFormat(line)}</p>`);
-  }
-
-  closeList();
-  return html.join("");
-}
-
 async function requestJson(url, options = {}) {
   const response = await fetch(url, {
     headers: { "Content-Type": "application/json" },
@@ -193,6 +126,7 @@ function currentProjectPayload() {
     outputs: state.outputs,
     outputTask: state.outputTask,
     images: state.images,
+    reviews: review.snapshot(),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -244,6 +178,7 @@ function loadProject(id) {
   elements.inputs.character.value = project.character || "";
   elements.inputs.scene.value = project.scene || "";
   elements.notes.value = project.notes || "";
+  review.restore(project.reviews);
   setTask(project.task || "outline", { preserveStatus: true });
   renderImages();
   renderOutput();
@@ -253,6 +188,7 @@ function loadProject(id) {
 function newProject() {
   if (!canReplaceDraft()) return;
   state.outputs = {};
+  review.restore({});
   state.dirty = false;
   state.projectId = "";
   state.outputText = "";
@@ -309,6 +245,7 @@ async function loadExamples() {
   }
 
   if (draftVersion !== oldVersion) { setStatus("已保留载入期间的新输入，请再次载入示例。"); return; }
+  review.restore({});
   state.projectId = ""; state.outputs = {}; state.outputText = ""; state.images = [];
   state.dirty = true; renderOutput(); renderImages(); elements.projectList.value = "";
   elements.projectTitle.value = "雨图修复师";
@@ -322,35 +259,20 @@ async function loadExamples() {
 function currentPayload() {
   return {
     task: state.task,
-    brief: elements.inputs.brief.value,
-    character: elements.inputs.character.value,
-    scene: elements.inputs.scene.value,
+    ...Object.fromEntries(TASKS[state.task].fields.map(field => [field, elements.inputs[field].value])),
+    instructions: elements.notes.value,
   };
 }
 
-async function generate() {
+async function reviewAction(callback) {
   if (state.busy) return;
-  const submittedTask = state.task;
   setBusy(true);
-  setStatus("正在生成...");
-  elements.generate.disabled = true;
-  try {
-    const data = await requestJson("/api/generate", {
-      method: "POST",
-      body: JSON.stringify(currentPayload()),
-    });
-    state.outputText = data.result;
-    state.outputs[submittedTask] = data.result;
-    state.outputTask = submittedTask;
-    state.dirty = true;
-    renderOutput();
-    setStatus("生成完成。", "ok");
-  } catch (error) {
-    setStatus(error.message, "error");
-  } finally {
-    setBusy(false);
-  }
+  setStatus("正在检查当前稿件…");
+  try { await callback(); setStatus("已更新，原稿保持不变。", "ok"); }
+  catch(error) { setStatus(error.message || "操作失败，原稿和已有建议已保留。", "error"); }
+  finally { setBusy(false); }
 }
+async function generate() { await reviewAction(() => review.prepare()); }
 
 async function runAudit() {
   setStatus("正在运行审计...");
@@ -371,11 +293,7 @@ async function runAudit() {
   }
 }
 
-function renderOutput() {
-  elements.output.innerHTML = state.outputText
-    ? renderMarkdown(state.outputText)
-    : '<p class="empty-state">稿纸是空的。</p>';
-}
+function renderOutput() { review.render(); }
 
 async function copyOutput() {
   if (!state.outputText) {
@@ -486,9 +404,50 @@ elements.imageGallery.addEventListener("click", (event) => {
   }
 });
 
+const review = new WritingReview({
+  root: elements.output, input: currentPayload, request: requestJson,
+  action: reviewAction, changed: () => { state.dirty = true; },
+  setOutput: value => { state.outputText = value; state.outputs[state.task] = value; }
+});
+document.getElementById('export-request').addEventListener('click', () => {
+  if (!review.fresh()) return;
+  downloadBlob(new Blob([JSON.stringify(review.current().session.request,null,2)], {type:'application/json'}),'writing-request.json');
+  setStatus('请求已导出，请交给 AI 助手生成建议包。');
+});
+document.getElementById('download-manuscript').addEventListener('click', () => {
+  if (!review.fresh() || !review.current().session.proposal) return;
+  downloadBlob(new Blob([review.current().session.revised_scene],{type:'text/plain;charset=utf-8'}),'manuscript.txt');
+  setStatus('当前稿件已下载。');
+});
+document.getElementById('import-proposal').addEventListener('change', event => {
+  const file = event.target.files[0]; event.target.value = '';
+  if (!file || state.busy) return;
+  void reviewAction(async () => {
+    if (file.size > 1000000) throw new Error('建议包超过 1 MB，请缩小后重试。');
+    let data;
+    try { data = JSON.parse(await file.text()); } catch { throw new Error('建议包不是有效 JSON，已有内容已保留。'); }
+    await review.importProposal(data);
+  });
+});
+document.getElementById('try-review').addEventListener('click', () => {
+  if (!canReplaceDraft()) return;
+  void reviewAction(async () => {
+    const data = await requestJson('/api/examples');
+    state.projectId = ''; state.outputs = {}; state.images = [];
+    elements.projectTitle.value = '末班渡船'; elements.projectList.value = '';
+    elements.inputs.brief.value = ''; elements.inputs.character.value = '';
+    elements.inputs.scene.value = data.reviewExample.scene;
+    elements.notes.value = data.reviewExample.instructions;
+    state.task = 'revision'; state.outputTask = 'revision';
+    review.restore({});
+    await review.importProposal(data.reviewProposal);
+    renderImages();
+  }).then(() => setTask('revision',{preserveStatus:true}));
+});
 refreshProjectList();
 renderImages();
-setStatus("从一段原创构想开始，或载入公开示例。生成器使用离线模板。");
+setTask('revision');
+setStatus("写下原稿，保留你的表达。也可以先试读一份修订示例。");
 
 let draftVersion = 0;
 function canReplaceDraft() {
@@ -496,10 +455,11 @@ function canReplaceDraft() {
 }
 function setBusy(value) {
   state.busy = value;
-  for (const control of [...elements.tabs, elements.generate, elements.loadSample, elements.newProject, elements.projectList, ...Object.values(elements.inputs), elements.projectTitle, elements.notes, elements.imageInput]) control.disabled = value;
+  for (const control of [...elements.tabs, elements.generate, elements.loadSample, elements.newProject, elements.projectList, ...Object.values(elements.inputs), elements.projectTitle, elements.notes, elements.imageInput, elements.saveProject, elements.exportProject, document.getElementById('try-review'), document.getElementById('import-proposal')]) control.disabled = value;
+  for (const control of elements.output.querySelectorAll('button')) control.disabled = value || (control.textContent === '撤销上一步' && !review.current()?.history.length);
   elements.output.setAttribute('aria-busy', String(value));
 }
-for (const input of [...Object.values(elements.inputs), elements.projectTitle, elements.notes]) input.addEventListener('input', () => { state.dirty = true; draftVersion += 1; });
+for (const input of [...Object.values(elements.inputs), elements.projectTitle, elements.notes]) input.addEventListener('input', () => { state.dirty = true; draftVersion += 1; review.render(); });
 window.addEventListener('beforeunload', event => { if (state.dirty) { event.preventDefault(); event.returnValue = ''; } });
 document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !event.isComposing) { event.preventDefault(); void generate(); } });
 

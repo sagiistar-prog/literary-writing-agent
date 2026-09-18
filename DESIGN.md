@@ -12,7 +12,14 @@ colors:
   teal-dark: "#423b87"
   wine: "#783f4d"
   graphite: "#292d46"
+  review-stale: "#854126"
 typography:
+  review-heading:
+    fontSize: "18px"
+    lineHeight: 1.5
+  review-label:
+    fontSize: "14px"
+    fontWeight: 500
   body:
     fontFamily: 'Inter, "Segoe UI", "Microsoft YaHei", "PingFang SC", Arial, sans-serif'
     letterSpacing: "0em"
@@ -50,6 +57,16 @@ components:
 ---
 
 # Design System: Literary Writing Agent
+
+## 0.3 修订交互
+
+沿用现有紫灰工作台，新增原文与建议的两栏对照，760px 以下改为上下排列。修改项用分隔线组织，正文保留换行与空白；理由使用 muted 色，采纳与保留按钮均可反向选择。当前选择以文字和 aria-pressed 共同标明，不只依赖颜色。
+
+修订台先显示意图与选择数量，再显示逐条对照、待确认和当前稿件。导入或准备请求后焦点移到修订台标题，内部滚动回到开头；逐条修改时留在当前选择处。撤销恢复前一次完整选择。旧输入建议显示明确失效状态，关闭导出而保留材料。
+
+插图板使用原生 details 默认收起；需要时仍可展开上传。按钮最小44px，键盘可达的文件输入使用可见 focus-within 描边。状态仅对应真实请求，无模拟生成等待动画。产品界面没有中点分隔符。
+
+实际浏览器和截图入口：scripts/check_review.cjs。保留纸面原有细纹和两层工作区；本轮属于功能与交互完善，没有重做整站视觉风格。
 
 ## Overview
 

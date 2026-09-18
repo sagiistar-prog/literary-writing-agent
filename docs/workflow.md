@@ -1,48 +1,12 @@
-# Workflow
+# 从原稿到作者确认的版本
 
-## 1. Intake
+1. 作者选择任务，填写原文和写作要求。原稿保留，照片与札记可随作品保存。
+2. 本地工具准备含输入指纹和 JSON Schema 的请求。没有提案时明确 needs_proposal，不返回固定故事。
+3. 宿主读取技能，提出基于当前材料的建议。修订定位到具体原句，大纲与灵感说明新增设定与取舍。
+4. 契约和语义分工：工具检查位置、重复、重叠、输入身份；宿主及作者判断改动是否符合人物、情节和语气。
+5. 作者逐条采纳或保留，撤销只改变选择，原稿始终不被改写。
+6. 下载当前正文或含理由的评审记录；保存将材料和选择写入本机浏览器。再次输入会使旧建议失效，不能把旧结果当作新稿导出。
 
-The user provides one of three public-safe inputs:
+旧命令的 rules、ethics、preferences 路径仅保留为兼容性参数；不是执行的创作规则。当前任务约束明确放在 instructions，并交给宿主阅读。configs/ 文档可作为写作参考，不能把读取配置文件说成模型已执行规则。
 
-- a story brief
-- a character seed
-- a scene draft
-
-The Agent treats the input as raw creative material, not as finished text.
-
-## 2. Rule Loading
-
-The scripts accept rule files from `configs/`:
-
-- `writing_rules.yaml`
-- `style_ethics.yaml`
-- `male_gaze_rules.yaml`
-- `user_preferences.yaml`
-
-The Safe Demo reads these files as context references and records their paths in the generated output.
-
-## 3. Generation
-
-Each task produces a structured artifact:
-
-- outline generation
-- inspiration generation
-- scene revision
-- male gaze revision
-
-The generated files are intentionally reviewable and sectioned.
-
-## 4. Explanation
-
-Every revision-oriented output includes notes about craft choices, risk notes, and originality. This makes it easier for a writer or reviewer to understand what changed and why.
-
-## 5. Audit
-
-Before publishing, run:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\portfolio_audit.ps1
-```
-
-The audit checks tracked files when a Git index exists. Before the first commit, it scans candidate project files inside the repository only and excludes generated work folders.
-
+公开发布前执行测试、四个 Safe Demo 命令、示例一致性检查和 portfolio_audit.ps1。审计不等于文本原创性或文学质量认证。

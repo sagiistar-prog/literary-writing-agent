@@ -1,0 +1,6 @@
+{
+  "name": "literary-writing-review-checks",
+  "private": true,
+  "scripts": { "test:review": "node scripts/check_review.cjs" },
+  "devDependencies": { "playwright": "1.63.0", "axe-core": "4.13.0" }
+}

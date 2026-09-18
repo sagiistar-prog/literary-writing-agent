@@ -1,3 +1,2 @@
-# No external runtime dependencies are required for the Safe Demo.
-# The scripts use only the Python standard library.
+-r requirements-plugin.txt
 

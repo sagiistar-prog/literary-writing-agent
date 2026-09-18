@@ -1,7 +1,7 @@
 {
   "name": "literary-writing-agent",
-  "version": "0.2.0",
-  "description": "演示原创写作结构、修订理由与主体视角检查",
+  "version": "0.3.0",
+  "description": "基于原稿的创作提案与可撤销修订",
   "author": {
     "name": "Oscar Qi",
     "url": "https://github.com/sagiistar-prog"
@@ -11,8 +11,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Literary Writing Studio",
-    "shortDescription": "演示原创写作结构、修订理由与主体视角检查",
-    "longDescription": "演示原创写作结构、修订理由与主体视角检查。固定模板展示写作框架；不是可泛化的 AI 写作模型。输出需作者审阅，不模仿在世作者的具体文风。",
+    "shortDescription": "基于原稿的创作提案与可撤销修订",
+    "longDescription": "宿主 AI 提出原创大纲、灵感与局部修订，本地工具校验原文定位，作者逐条采纳并导出自己的版本。",
     "developerName": "Oscar Qi",
     "category": "Productivity",
     "capabilities": [
@@ -20,7 +20,7 @@
       "Write"
     ],
     "defaultPrompt": [
-      "演示原创写作结构、修订理由与主体视角检查，先使用仓库内的虚构样例。"
+      "保留我的写作意图，为原稿提出可逐条审阅的建议。"
     ]
   }
 }

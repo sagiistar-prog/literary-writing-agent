@@ -5,22 +5,17 @@
       "type": "object",
       "properties": {
         "schema_version": {
-          "const": "1.0"
+          "const": "2.0"
         },
         "status": {
           "const": "ok"
         },
         "mode": {
-          "const": "offline_template"
+          "const": "author_review"
         },
         "result": {
           "type": "object",
           "properties": {
-            "markdown": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 500000
-            },
             "task": {
               "enum": [
                 "outline",
@@ -29,22 +24,239 @@
                 "male_gaze"
               ]
             },
+            "source": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "input_hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "phase": {
+              "enum": [
+                "needs_proposal",
+                "review_ready"
+              ]
+            },
+            "proposal": {
+              "anyOf": [
+                {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "schema_version": {
+                      "const": "1.0"
+                    },
+                    "task": {
+                      "enum": [
+                        "outline",
+                        "inspiration",
+                        "revision",
+                        "male_gaze"
+                      ]
+                    },
+                    "input_hash": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "summary": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 3000
+                    },
+                    "edits": {
+                      "type": "array",
+                      "maxItems": 100,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^E[0-9]{1,4}$"
+                          },
+                          "before": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 30000
+                          },
+                          "occurrence": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 30000
+                          },
+                          "after": {
+                            "type": "string",
+                            "minLength": 0,
+                            "maxLength": 30000
+                          },
+                          "rationale": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 3000
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "before",
+                          "occurrence",
+                          "after",
+                          "rationale"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "content": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100000
+                    },
+                    "notes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      "maxItems": 30
+                    },
+                    "assumptions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      "maxItems": 30
+                    },
+                    "questions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 3000
+                      },
+                      "maxItems": 30
+                    }
+                  },
+                  "required": [
+                    "schema_version",
+                    "task",
+                    "input_hash",
+                    "summary",
+                    "questions"
+                  ],
+                  "additionalProperties": false,
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "task": {
+                            "enum": [
+                              "revision",
+                              "male_gaze"
+                            ]
+                          }
+                        }
+                      },
+                      "then": {
+                        "required": [
+                          "edits"
+                        ],
+                        "not": {
+                          "anyOf": [
+                            {
+                              "required": [
+                                "content"
+                              ]
+                            },
+                            {
+                              "required": [
+                                "notes"
+                              ]
+                            },
+                            {
+                              "required": [
+                                "assumptions"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "else": {
+                        "required": [
+                          "content",
+                          "notes",
+                          "assumptions"
+                        ],
+                        "not": {
+                          "required": [
+                            "edits"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "edits": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "accepted_edits": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^E[0-9]{1,4}$"
+              },
+              "maxItems": 100,
+              "uniqueItems": true
+            },
+            "revised_scene": {
+              "type": "string"
+            },
             "originality_review_required": {
               "const": true
+            },
+            "request": {
+              "type": "object"
+            },
+            "markdown": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 10000000
             }
           },
           "required": [
-            "markdown",
             "task",
-            "originality_review_required"
+            "source",
+            "input_hash",
+            "phase",
+            "proposal",
+            "edits",
+            "accepted_edits",
+            "revised_scene",
+            "originality_review_required",
+            "request",
+            "markdown"
           ],
           "additionalProperties": false
         },
         "warnings": {
           "type": "array",
           "items": {
-            "type": "string"
-          }
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3000
+          },
+          "maxItems": 30
         }
       },
       "required": [
@@ -60,7 +272,7 @@
       "type": "object",
       "properties": {
         "schema_version": {
-          "const": "1.0"
+          "const": "2.0"
         },
         "status": {
           "const": "error"

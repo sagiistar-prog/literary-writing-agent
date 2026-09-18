@@ -626,6 +626,39 @@ button { transition: background-color 160ms ease-out, box-shadow 160ms ease-out;
 button:active { transform: translateY(1px); }
 
 [hidden] { display: none !important; }
+.output-actions { flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.output-board > .board-head { flex-wrap: wrap; gap: 16px; }
+.review-summary { max-width: 72ch; margin-bottom: 24px; }
+.review-toolbar, .edit-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.review-toolbar { justify-content: space-between; padding-bottom: 20px; }
+.edit-item { padding-block: 24px; border-top: 1px solid var(--line); }
+.edit-item h4, .review-preview h4 { font-size: 18px; line-height: 1.5; margin: 0 0 16px; }
+.edit-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.edit-comparison > div { min-width: 0; }
+.edit-comparison h5 { color: var(--muted); font-size: 14px; font-weight: 500; margin: 0 0 8px; }
+.manuscript-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.9; max-width: 72ch; }
+.edit-rationale { color: var(--muted); margin: 18px 0 !important; max-width: 72ch; }
+.edit-actions [aria-pressed="true"] { background: var(--teal-dark); color: white; }
+.review-preview { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
+.markdown-output details { padding-block: 16px; }
+.markdown-output summary { cursor: pointer; }
+.markdown-output details p { margin-top: 12px; }
+.stale-note { color: #854126; }
+.proposal-upload { display: inline-flex; align-items: center; min-height: 44px; }
+.illustration-board > summary { padding: 20px; cursor: pointer; font-size: 17px; font-weight: 600; }
+.illustration-board:not([open]) { align-self: start; }
+#review-board { scroll-margin-top: 20px; }
+.proposal-upload:focus-within { outline: 2px solid var(--teal); outline-offset: 3px; }
+.proposal-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; display: block; }
+.masthead-actions { flex-wrap: wrap; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+@media(max-width: 760px) {
+ .edit-comparison { grid-template-columns: 1fr; gap: 18px; }
+ .output-actions { justify-content: flex-start; }
+ .masthead-actions { display: flex; flex-wrap: wrap; }
+ .masthead-actions button { flex: 1 1 130px; }
+ .review-toolbar { align-items: flex-start; }
+}
 .project-panel summary { cursor:pointer; font-weight:600; padding:4px 0 12px; }
 .task-tab.is-active { background: #5d54ae; border-color: #a69fdf; }
 .status-line { border-left-width:1px; }

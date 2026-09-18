@@ -1,6 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Literary Writing Studio input",
   "type": "object",
   "properties": {
     "task": {
@@ -13,18 +12,35 @@
     },
     "brief": {
       "type": "string",
-      "minLength": 1,
+      "minLength": 0,
       "maxLength": 30000
     },
     "character": {
       "type": "string",
-      "minLength": 1,
+      "minLength": 0,
       "maxLength": 30000
     },
     "scene": {
       "type": "string",
-      "minLength": 1,
+      "minLength": 0,
       "maxLength": 30000
+    },
+    "instructions": {
+      "type": "string",
+      "minLength": 0,
+      "maxLength": 6000
+    },
+    "proposal": {
+      "type": "object"
+    },
+    "accepted_edits": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^E[0-9]{1,4}$"
+      },
+      "maxItems": 100,
+      "uniqueItems": true
     }
   },
   "required": [
@@ -65,21 +81,10 @@
       "if": {
         "properties": {
           "task": {
-            "const": "revision"
-          }
-        }
-      },
-      "then": {
-        "required": [
-          "scene"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "task": {
-            "const": "male_gaze"
+            "enum": [
+              "revision",
+              "male_gaze"
+            ]
           }
         }
       },

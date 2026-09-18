@@ -54,7 +54,7 @@
 
         <section class="ethics-card">
           <h2>边界</h2>
-          <p>原创辅助，不做风格克隆；临时输入默认只留在本机浏览器。</p>
+          <p>原创辅助，不做风格克隆；草稿仅在本机处理，保存由你决定。</p>
         </section>
       </aside>
 
@@ -66,8 +66,9 @@
           </div>
           <div class="masthead-actions">
             <button id="load-sample" class="secondary-button" type="button">示例</button>
+            <button id="try-review" class="secondary-button" type="button">试读修订</button>
             <button id="run-audit" hidden class="secondary-button" type="button">审计</button>
-            <button id="generate" class="primary-button" type="button">生成</button>
+            <button id="generate" class="primary-button" type="button">准备写作请求</button>
           </div>
         </header>
 
@@ -85,26 +86,26 @@
 
             <label class="field-block" data-field="brief">
               <span>故事简述</span>
-              <textarea id="brief-input" spellcheck="false"></textarea>
+              <textarea id="brief-input" spellcheck="false" maxlength="30000"></textarea>
             </label>
 
             <label class="field-block is-hidden" data-field="character">
               <span>人物种子</span>
-              <textarea id="character-input" spellcheck="false"></textarea>
+              <textarea id="character-input" spellcheck="false" maxlength="30000"></textarea>
             </label>
 
             <label class="field-block is-hidden" data-field="scene">
               <span>场景草稿</span>
-              <textarea id="scene-input" spellcheck="false"></textarea>
+              <textarea id="scene-input" spellcheck="false" maxlength="30000"></textarea>
             </label>
           </div>
 
           <aside class="right-stack">
-            <section class="illustration-board">
+            <details class="illustration-board">
+              <summary>插图板</summary>
               <div class="board-head compact">
                 <div>
 
-                  <h3>插图板</h3>
                 </div>
                 <label class="upload-button">
                   添加
@@ -112,30 +113,33 @@
                 </label>
               </div>
               <div id="image-gallery" class="image-gallery"></div>
-            </section>
+            </details>
 
             <section class="note-board">
               <div class="board-head compact">
                 <div>
 
-                  <h3>创作札记</h3>
+                  <h3>这次想怎样调整</h3>
                 </div>
               </div>
-              <textarea id="notes-input" aria-label="写作补充说明" spellcheck="false"></textarea>
+              <textarea id="notes-input" aria-label="写作要求" placeholder="例如：保留第一人称，缩短解释，结尾不揭示真相。" maxlength="6000" spellcheck="false"></textarea>
             </section>
           </aside>
         </section>
 
         <details id="audit-panel" hidden class="output-board"><summary>作品集检查结果</summary><pre id="audit-output" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details>
-        <section class="output-board" aria-label="Generated output">
+        <section id="review-board" class="output-board" aria-label="修订审阅">
           <div class="board-head">
             <div>
 
-              <h3>生成稿</h3><p>离线模板示例</p>
+              <h3 id="review-title" tabindex="-1">修订台</h3>
             </div>
             <div class="output-actions">
+              <button id="export-request" class="secondary-button" type="button" disabled>导出请求</button>
+              <label class="upload-button proposal-upload">导入建议包<input id="import-proposal" type="file" accept=".json,application/json" /></label>
+              <button id="download-manuscript" class="secondary-button" type="button" disabled>下载稿件</button>
               <button id="copy-output" class="secondary-button" type="button">复制</button>
-              <button id="download-output" class="secondary-button" type="button">下载</button>
+              <button id="download-output" class="secondary-button" type="button">下载评审记录</button>
             </div>
           </div>
           <article id="output" class="markdown-output">

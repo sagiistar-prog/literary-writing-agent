@@ -40,14 +40,14 @@ function Invoke-Git {
 function Get-RepoFiles {
     $inside = Invoke-Git "rev-parse" "--is-inside-work-tree"
     if ($inside.Code -eq 0) {
-        $tracked = & git -c "safe.directory=$Root" ls-files
+        $tracked = & git -c "safe.directory=$Root" ls-files --cached --others --exclude-standard --deduplicate
         if ($LASTEXITCODE -eq 0 -and $tracked.Count -gt 0) {
             return @($tracked | Where-Object { $_ -and (Test-Path -LiteralPath $_ -PathType Leaf) })
         }
     }
 
     Add-Warning "No tracked files found yet; scanning candidate project files only."
-    $excluded = @(".git", ".venv", "output", "work", "raw")
+    $excluded = @(".git", ".venv", "output", "work", "raw", "node_modules", "__pycache__")
     $files = Get-ChildItem -LiteralPath $Root -Recurse -File -Force | Where-Object {
         $relative = Resolve-Path -LiteralPath $_.FullName -Relative
         foreach ($part in $excluded) {
@@ -105,7 +105,8 @@ function Test-GitHubPublic {
         return
     }
 
-    $json = & gh repo view $repo --json nameWithOwner,visibility,url 2>$null
+    try { $json = & gh repo view $repo --json nameWithOwner,visibility,url 2>$null }
+    catch { Add-Warning "GitHub metadata unavailable; file audit continues."; return }
     if ($LASTEXITCODE -ne 0 -or -not $json) {
         Add-Warning "GitHub visibility check could not reach the remote repository."
         return

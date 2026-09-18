@@ -1,18 +1,15 @@
 # 开源选择与贡献边界
 
-沿用原生界面或CLI，新增JSON Schema输入输出验证与插件协议。没有为了获得开源标签引入无用途的前端依赖。
+2026-09-18 检查官方仓库和许可证。星数只用于发现候选，不是是否采用的结论。
 
-| 项目 | 质量判断与用途 | 采用状态 |
+| 项目 | 检查与选择 | 实际采用 |
 |---|---|---|
-| [Radix Primitives](https://github.com/radix-ui/primitives) | MIT，明确可访问组件语义；Dialog适合核对出处、关闭后继续阅读 | CareGuide实际使用，其他项目按需 |
-| [Motion](https://github.com/motiondivision/motion) | MIT，成熟React动效；状态和reduced motion优先于装饰 | Where-to-live已有依赖 |
-| [Sonner](https://github.com/emilkowalski/sonner) | MIT，适合短反馈；本轮原位状态已足够，不重复引入 | 参考，未接入 |
-| [AI Elements](https://github.com/vercel/ai-elements) | Apache-2.0，任务与引用组件值得参考；不强行把证据工具改成聊天 | 参考，未复制代码 |
-| [FastEmbed](https://github.com/qdrant/fastembed) | Apache-2.0，ONNX本地CPU推理，明确模型列表 | CareGuide与EU Law实际使用 |
-| [FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding) | BGE模型MIT，区分语言、维数与查询指令 | CareGuide中文，EU Law英文 |
-| [Haystack](https://github.com/deepset-ai/haystack) | Apache-2.0，清洗、检索、融合阶段边界清楚 | 架构参考，未声明整体框架接入 |
-| [pgvector](https://github.com/pgvector/pgvector) | PostgreSQL License，复用已有数据库运维能力 | 可选持久化适配；本轮未连接数据库 |
+| [jsonschema](https://github.com/python-jsonschema/jsonschema) | MIT，Python Draft 2020-12 实现，约 4,983 stars，GitHub 仓库仍维护 | 输入、建议包与输出校验 |
+| [ProseMirror](https://github.com/ProseMirror/prosemirror) | 约 8,701 stars；GitHub 聚合仓库已归档，README 指向迁移后的开发站；富文档和协作能力超出本次纯文本审阅需要 | 阅读官方说明，未复制或引入 |
+| [CodeMirror](https://github.com/codemirror/dev) | GitHub 开发仓库约 7,818 stars，已归档；不能把旧聚合仓库当作新依赖入口 | 候选比较，未接入代码编辑器 |
+| [Playwright](https://github.com/microsoft/playwright) | Apache-2.0，可执行真实浏览器交互，锁定开发依赖版本 | 导入、选择、撤销、保存、下载与响应式检查 |
+| [axe-core](https://github.com/dequelabs/axe-core) | MPL-2.0，可自动发现部分无障碍缺陷 | 测试注入指定 WCAG 规则，不进入产品运行资源 |
 
-依赖的实际版本以锁文件/requirements为准。选择依据是维护方式、许可证、接口清晰度、可测试性、部署成本与任务匹配，不仅是star数量。更新依赖先在独立分支运行构建、契约和关键任务测试，再升级。
+产品页使用原生文本框、按钮和 details，避免为只读对照和短篇修订引入完整富文本框架。未来需要长篇批注或协作时，再评估文档模型及编辑历史迁移成本。这个取舍来自当前任务，不表示上述编辑器质量不足。
 
-原始参考图用于理解留白、蓝紫灰、光影和状态反馈，没有复制其图片、Logo或商业素材。Impeccable用于审查布局、交互与可访问性；技术注释与产品取舍留在文档中，产品界面不堆砌说明。
+可归属的本项目工作：用户控制流程、输入身份、原文定位协议、逐条决策与撤销、错误恢复和验收设计。没有把通用模型或开源库说成自研能力。Impeccable 用于交互与视觉检查，未复制参考图的图片或品牌素材。

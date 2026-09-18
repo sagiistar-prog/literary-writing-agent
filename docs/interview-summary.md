@@ -1,27 +1,9 @@
-# Interview Summary
+# 面试展示路线
 
-## One-Liner
+从“为什么作者会害怕一键润色”开始：流畅新稿可能改变人物动机，也很难只取其中一句。产品把判断权留给作者，让 AI 提案变成可以选择和撤销的局部修改。
 
-Literary Writing Agent is an original fiction writing assistant that turns briefs, character seeds, and scene drafts into structured creative artifacts with explicit style ethics and female-subjectivity revision support.
+启动工作台，点击试读修订，只采纳 E1，保留 E2；下载正文，核对未选内容。接着改变原稿，展示旧建议失效及导出被关闭。最后打开插件协议和测试说明哪些是可确定校验、哪些仍需要人判断。
 
-## What It Demonstrates
+本轮发现的旧问题很具体：其他故事输入仍返回同一段 Lin Qiao 场景。已移除固定输出，改为宿主创作、契约校验、作者选择的完整流程。没有宿主时只准备请求，明确当前能力。
 
-- Agent workflow design for a creative domain.
-- Structured outputs that are easy to review.
-- A safety boundary against style cloning and protected text reuse.
-- A specialized revision workflow for reducing objectifying description.
-- Reproducible local Safe Demo scripts.
-- A repository audit step before public publishing.
-
-## Why It Matters
-
-Creative tools need more than fluent generation. They need craft structure, boundaries, explainability, and respect for the writer's own material. This project shows how those pieces can live together in a small but complete portfolio repository.
-
-## Demo Flow
-
-1. Run outline generation from a fictional story brief.
-2. Run inspiration generation from the same brief and a character seed.
-3. Revise a scene for texture and subtext.
-4. Revise the same scene to reduce objectifying point of view.
-5. Run the repository audit.
-
+可以展示：产品问题定义、交互原型及实现、AI 与确定性代码分工、结构化协议、负例回归、独立技能试跑、发布 CI。不能声称已有作者满意度、文学质量提升或生产客户业绩。

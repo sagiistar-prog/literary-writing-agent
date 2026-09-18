@@ -15,10 +15,7 @@ MAX_BODY_BYTES = 1_000_000
 
 sys.path.insert(0, str(ROOT))
 
-from scripts.generate_inspiration import build_inspirations  # noqa: E402
-from scripts.generate_outline import build_outline  # noqa: E402
-from scripts.remove_male_gaze import build_male_gaze_revision  # noqa: E402
-from scripts.revise_scene import build_revision  # noqa: E402
+from scripts.writing_session import run_session
 
 
 def read_repo_file(relative_path: str) -> str:
@@ -42,42 +39,7 @@ def validate_text(value: object, field: str) -> str:
 
 
 def generate(payload: dict[str, object]) -> str:
-    task = payload.get("task")
-    if task == "outline":
-        brief = validate_text(payload.get("brief"), "brief")
-        return build_outline(
-            brief,
-            str(ROOT / "configs/writing_rules.yaml"),
-            str(ROOT / "configs/user_preferences.yaml"),
-            dry_run=True,
-        )
-    if task == "inspiration":
-        brief = validate_text(payload.get("brief"), "brief")
-        character = validate_text(payload.get("character"), "character")
-        return build_inspirations(
-            brief,
-            character,
-            str(ROOT / "configs/writing_rules.yaml"),
-            str(ROOT / "configs/user_preferences.yaml"),
-            dry_run=True,
-        )
-    if task == "revision":
-        scene = validate_text(payload.get("scene"), "scene")
-        return build_revision(
-            scene,
-            str(ROOT / "configs/writing_rules.yaml"),
-            str(ROOT / "configs/style_ethics.yaml"),
-            str(ROOT / "configs/user_preferences.yaml"),
-            dry_run=True,
-        )
-    if task == "male_gaze":
-        scene = validate_text(payload.get("scene"), "scene")
-        return build_male_gaze_revision(
-            scene,
-            str(ROOT / "configs/male_gaze_rules.yaml"),
-            dry_run=True,
-        )
-    raise ValueError("Unknown task.")
+    return run_session(payload)["markdown"]
 
 
 def run_audit() -> dict[str, object]:
@@ -108,6 +70,9 @@ class AppHandler(BaseHTTPRequestHandler):
     server_version = "LiteraryWritingAgent/1.0"
 
     def do_GET(self) -> None:
+        if self.headers.get("Host") not in {f"127.0.0.1:{self.server.server_port}", f"localhost:{self.server.server_port}"}:
+            self.send_json({"error": "Host rejected"}, status=403)
+            return
         parsed = urlparse(self.path)
         if parsed.path == "/api/health":
             self.send_json({"ok": True, "app": "Literary Writing Agent"})
@@ -118,6 +83,8 @@ class AppHandler(BaseHTTPRequestHandler):
                     "storyBrief": read_repo_file("examples/sample_story_brief.md"),
                     "characterSeed": read_repo_file("examples/sample_character_seed.md"),
                     "scene": read_repo_file("examples/sample_scene.md"),
+                    "reviewExample": json.loads(read_repo_file("examples/revision-input.json")),
+                    "reviewProposal": json.loads(read_repo_file("examples/revision-proposal.json")),
                 }
             )
             return
@@ -131,6 +98,9 @@ class AppHandler(BaseHTTPRequestHandler):
             return
         parsed = urlparse(self.path)
         try:
+            if parsed.path == "/api/session":
+                self.send_json({"ok": True, "session": run_session(self.read_json_body())})
+                return
             if parsed.path == "/api/generate":
                 payload = self.read_json_body()
                 self.send_json({"ok": True, "result": generate(payload)})
@@ -182,6 +152,9 @@ class AppHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(content)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
         self.end_headers()
         self.wfile.write(content)
 
@@ -190,6 +163,9 @@ class AppHandler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(content)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
         self.end_headers()
         self.wfile.write(content)
 
@@ -226,6 +202,8 @@ def main() -> None:
         print("Local app check passed.")
         return
 
+    if args.host not in ("127.0.0.1", "localhost"):
+        raise SystemExit("This personal writing server binds to loopback only.")
     port = args.port if args.host != "127.0.0.1" else find_port(args.port)
     server = ThreadingHTTPServer((args.host, port), AppHandler)
     print(f"Literary Writing Agent app running at http://{args.host}:{port}")

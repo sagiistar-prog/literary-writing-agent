@@ -1,6 +1,6 @@
 # Safe Demo
 
-The Safe Demo uses only public, fictional example files in this repository. It does not call external models, does not read private files, and does not require any account credentials.
+The Safe Demo uses only public, fictional example files in this repository. It does not call external models, does not read private files, and does not require any account credentials. Install requirements.txt first. These compatibility commands now prepare writing requests from the exact input; they do not generate a fixed sample story. For a complete authored proposal run the input/proposal commands in README.md. Rules and preferences paths remain compatibility arguments, not an executed model policy.
 
 ## Standard Commands
 
