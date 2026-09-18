@@ -1,8 +1,8 @@
 # Generated Male Gaze Revision
 
 Mode: deterministic safe demo
-Generated at: 2026-05-16 01:32:43
-Source rules: `configs\male_gaze_rules.yaml`
+Generated at: 2026-09-18 04:47:23
+Source rules: `configs/male_gaze_rules.yaml`
 
 ## Source Scene
 

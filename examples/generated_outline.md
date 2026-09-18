@@ -1,9 +1,9 @@
 # Generated Outline
 
 Mode: deterministic safe demo
-Generated at: 2026-05-16 01:32:43
-Source rules: `configs\writing_rules.yaml`
-Preferences: `configs\user_preferences.yaml`
+Generated at: 2026-09-18 04:47:22
+Source rules: `configs/writing_rules.yaml`
+Preferences: `configs/user_preferences.yaml`
 
 ## Source Brief Snapshot
 

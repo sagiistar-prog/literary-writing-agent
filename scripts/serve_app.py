@@ -47,8 +47,8 @@ def generate(payload: dict[str, object]) -> str:
         brief = validate_text(payload.get("brief"), "brief")
         return build_outline(
             brief,
-            "configs/writing_rules.yaml",
-            "configs/user_preferences.yaml",
+            str(ROOT / "configs/writing_rules.yaml"),
+            str(ROOT / "configs/user_preferences.yaml"),
             dry_run=True,
         )
     if task == "inspiration":
@@ -57,24 +57,24 @@ def generate(payload: dict[str, object]) -> str:
         return build_inspirations(
             brief,
             character,
-            "configs/writing_rules.yaml",
-            "configs/user_preferences.yaml",
+            str(ROOT / "configs/writing_rules.yaml"),
+            str(ROOT / "configs/user_preferences.yaml"),
             dry_run=True,
         )
     if task == "revision":
         scene = validate_text(payload.get("scene"), "scene")
         return build_revision(
             scene,
-            "configs/writing_rules.yaml",
-            "configs/style_ethics.yaml",
-            "configs/user_preferences.yaml",
+            str(ROOT / "configs/writing_rules.yaml"),
+            str(ROOT / "configs/style_ethics.yaml"),
+            str(ROOT / "configs/user_preferences.yaml"),
             dry_run=True,
         )
     if task == "male_gaze":
         scene = validate_text(payload.get("scene"), "scene")
         return build_male_gaze_revision(
             scene,
-            "configs/male_gaze_rules.yaml",
+            str(ROOT / "configs/male_gaze_rules.yaml"),
             dry_run=True,
         )
     raise ValueError("Unknown task.")
@@ -124,6 +124,11 @@ class AppHandler(BaseHTTPRequestHandler):
         self.serve_static(parsed.path)
 
     def do_POST(self) -> None:
+        expected = {f"127.0.0.1:{self.server.server_port}", f"localhost:{self.server.server_port}"}
+        origin = self.headers.get("Origin")
+        if self.headers.get("Host") not in expected or (origin and origin not in {f"http://{h}" for h in expected}):
+            self.send_json({"error": "Origin rejected"}, status=403)
+            return
         parsed = urlparse(self.path)
         try:
             if parsed.path == "/api/generate":
@@ -139,11 +144,11 @@ class AppHandler(BaseHTTPRequestHandler):
         except subprocess.TimeoutExpired:
             self.send_json({"ok": False, "error": "Audit timed out."}, status=504)
         except Exception as error:  # pragma: no cover - last-resort local server guard.
-            self.send_json({"ok": False, "error": str(error)}, status=500)
+            self.send_json({"ok": False, "error": "生成失败，请检查输入后重试。"}, status=500)
 
     def read_json_body(self) -> dict[str, object]:
         length = int(self.headers.get("Content-Length", "0"))
-        if length > MAX_BODY_BYTES:
+        if not 0 < length <= MAX_BODY_BYTES:
             raise ValueError("Request body is too large.")
         raw = self.rfile.read(length)
         if not raw:
